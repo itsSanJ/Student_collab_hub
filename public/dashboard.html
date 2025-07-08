@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+  <!-- Navbar -->
+  <div class="bg-white shadow-md fixed top-0 left-0 right-0 z-10">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+      <h1 class="text-xl font-bold text-blue-600 flex items-center gap-2">📢 Student Collab Hub</h1>
+      <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded">
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <div class="max-w-3xl mx-auto p-4 mt-24 bg-white rounded-xl shadow-md">
+    <p class="mb-4 text-sm text-gray-600" id="userInfo"></p>
+
+    <!-- Post a Project -->
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-3 text-blue-700">💡 Post a Project</h2>
+      <input id="title" type="text" placeholder="Project Title"
+        class="w-full border px-3 py-2 mb-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <textarea id="description" placeholder="Project Description"
+        class="w-full border px-3 py-2 mb-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        rows="3"></textarea>
+      <input id="lookingFor" type="text" placeholder="Looking for (e.g. UI dev, backend dev)"
+        class="w-full border px-3 py-2 mb-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <button onclick="postProject()"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 w-full rounded">Post Project</button>
+    </div>
+
+    <!-- Post a Job -->
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-3 text-green-700">💼 Post a Job</h2>
+      <input id="jobTitle" type="text" placeholder="Job Title"
+        class="w-full border px-3 py-2 mb-2 rounded focus:outline-none focus:ring-2 focus:ring-green-500" />
+      <input id="company" type="text" placeholder="Company Name"
+        class="w-full border px-3 py-2 mb-2 rounded focus:outline-none focus:ring-2 focus:ring-green-500" />
+      <input id="role" type="text" placeholder="Role (e.g. Backend Dev, UI Designer)"
+        class="w-full border px-3 py-2 mb-2 rounded focus:outline-none focus:ring-2 focus:ring-green-500" />
+      <textarea id="jobDescription" placeholder="Job Description"
+        class="w-full border px-3 py-2 mb-3 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+        rows="3"></textarea>
+      <button onclick="postJob()"
+        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 w-full rounded">Post Job</button>
+    </div>
+
+    <hr class="my-6 border-gray-300" />
+
+    <!-- Job Listings -->
+    <h2 class="text-xl font-semibold mb-3 text-green-800">📌 All Job Listings</h2>
+    <div id="jobPosts" class="space-y-4 mb-8">
+      <!-- Job cards will be injected here -->
+    </div>
+
+    <hr class="my-6 border-gray-300" />
+
+    <!-- Project Listings -->
+    <h2 class="text-xl font-semibold mb-4 text-blue-800">📋 All Collaboration Projects</h2>
+    <div id="posts" class="space-y-4">
+      <!-- Project cards will be injected here -->
+    </div>
+  </div>
+
+  <!-- Script Logic -->
+  <script>
+    const email = localStorage.getItem('userEmail');
+    if (!email) window.location.href = '/';
+    else document.getElementById('userInfo').textContent = `Welcome, ${email}`;
+
+    function logout() {
+      localStorage.removeItem('userEmail');
+      window.location.href = '/';
+    }
+
+    async function postProject() {
+      const title = document.getElementById('title').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const lookingFor = document.getElementById('lookingFor').value.trim();
+
+      if (!title || !description) {
+        return alert("Please fill in all fields");
+      }
+
+      try {
+        const res = await fetch('/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, description, email, lookingFor })
+        });
+
+        const result = await res.json();
+        alert(result.message);
+        if (res.ok) {
+          document.getElementById('title').value = '';
+          document.getElementById('description').value = '';
+          document.getElementById('lookingFor').value = '';
+          loadPosts();
+        }
+      } catch (err) {
+        alert("Failed to post project");
+      }
+    }
+
+    async function postJob() {
+      const title = document.getElementById('jobTitle').value.trim();
+      const company = document.getElementById('company').value.trim();
+      const role = document.getElementById('role').value.trim();
+      const description = document.getElementById('jobDescription').value.trim();
+
+      if (!title || !company || !role || !description) {
+        return alert("Please fill in all job fields");
+      }
+
+      try {
+        const res = await fetch('/jobs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, company, role, description, email })
+        });
+
+        const result = await res.json();
+        alert(result.message);
+        if (res.ok) {
+          document.getElementById('jobTitle').value = '';
+          document.getElementById('company').value = '';
+          document.getElementById('role').value = '';
+          document.getElementById('jobDescription').value = '';
+          loadJobs();
+        }
+      } catch (err) {
+        alert("Failed to post job");
+      }
+    }
+
+    async function loadPosts() {
+      try {
+        const res = await fetch('/projects');
+        const posts = await res.json();
+        const container = document.getElementById('posts');
+        container.innerHTML = '';
+
+        posts.forEach(post => {
+          const div = document.createElement('div');
+          div.className = 'p-4 border rounded-lg bg-blue-50 shadow-md hover:shadow-lg transition-all';
+
+          div.innerHTML = `
+            <h3 class="font-bold text-lg text-blue-800">💡 ${post.title}</h3>
+            <p class="text-sm mt-1 text-gray-700">${post.description}</p>
+            ${post.lookingFor ? `<p class="mt-2 text-sm text-purple-700 font-medium">Looking for: ${post.lookingFor}</p>` : ''}
+            <p class="text-xs text-gray-500 mt-2 italic">Posted by: ${post.email}</p>
+          `;
+          container.appendChild(div);
+        });
+      } catch (err) {
+        console.error('Error loading projects:', err);
+      }
+    }
+
+    async function loadJobs() {
+      try {
+        const res = await fetch('/jobs');
+        const jobs = await res.json();
+        const container = document.getElementById('jobPosts');
+        container.innerHTML = '';
+
+        jobs.forEach(job => {
+          const div = document.createElement('div');
+          div.className = 'p-4 border rounded-lg bg-green-50 shadow-md';
+
+          div.innerHTML = `
+            <h3 class="font-bold text-lg text-green-800">📢 ${job.title} at ${job.company}</h3>
+            <p class="text-sm text-gray-700 mt-1">${job.description}</p>
+            <p class="text-sm text-purple-700 mt-2">Role: ${job.role}</p>
+            <p class="text-xs text-gray-500 mt-1 italic">Posted by: ${job.email}</p>
+          `;
+          container.appendChild(div);
+        });
+      } catch (err) {
+        console.error('Error loading jobs:', err);
+      }
+    }
+
+    // Load everything on start
+    loadPosts();
+    loadJobs();
+  </script>
+</body>
+</html>
