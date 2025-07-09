@@ -60,50 +60,50 @@
     <input type="password" id="loginPassword" placeholder="Password" />
     <button onclick="login()">Login</button>
   </div>
+<script>
+  const API_URL = 'https://student-collab-hub-bsjl.onrender.com';
 
-  <script>
-    const API_URL = 'https://student-collab-hub-bsjl.onrender.com';
+  async function register() {
+    const username = document.getElementById('regUsername').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
 
-    async function register() {
-      const username = document.getElementById('regUsername').value;
-      const email = document.getElementById('regEmail').value;
-      const password = document.getElementById('regPassword').value;
+    try {
+      const res = await fetch(`${API_URL}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password }),
+      });
 
-      try {
-        const res = await fetch(`${API_URL}/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, email, password })
-        });
-
-        const text = await res.text();
-        const data = JSON.parse(text);
-        alert(data.message);
-      } catch (err) {
-        alert('Register failed: ' + err.message);
-      }
+      const data = await res.json().catch(() => ({})); // ← Prevent crash
+      alert(data.message || 'Registered (maybe, no response body)');
+    } catch (err) {
+      alert('Register failed: ' + err.message);
     }
+  }
 
-    async function login() {
-      const email = document.getElementById('loginEmail').value;
-      const password = document.getElementById('loginPassword').value;
+  async function login() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
 
-      try {
-        const res = await fetch(`${API_URL}/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
+    try {
+      const res = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-        const text = await res.text();
-        const data = JSON.parse(text);
-        alert(data.message);
-        // Optionally redirect:
-        // window.location.href = '/dashboard.html';
-      } catch (err) {
-        alert('Login failed: ' + err.message);
+      const data = await res.json().catch(() => ({})); // ← Prevent crash
+      alert(data.message || 'Login (maybe, no response body)');
+
+      // Redirect if successful
+      if (data.message === 'Login successful') {
+        window.location.href = '/dashboard.html';
       }
+    } catch (err) {
+      alert('Login failed: ' + err.message);
     }
-  </script>
+  }
+</script>
 </body>
 </html>
