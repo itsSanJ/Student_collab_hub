@@ -25,7 +25,7 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ✅ MongoDB connection
-mongoose.connect('mongodb+srv://TestDB:Test1234@cluster0.b3aldmx.mongodb.net/student-collab-hub?retryWrites=true&w=majority&appName=student-collab-hub')
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ Connected to MongoDB Atlas'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
