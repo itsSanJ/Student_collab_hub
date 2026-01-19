@@ -92,6 +92,12 @@ app.get('/jobs', async (req, res) => {
 });
 
 // ✅ Catch-all route for SPA (serves index.html)
+// Health check
+app.get('/test', (req, res) => {
+  res.json({ message: 'Backend working!' });
+});
+
+// ALWAYS LAST
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
